@@ -34,7 +34,8 @@ scene.add(new THREE.HemisphereLight('#fff7f0', '#e7c3cc', 1.05));
 const sun = new THREE.DirectionalLight('#fff0dd', 3.4);
 sun.position.set(-9, 22, 13);
 sun.castShadow = true;
-sun.shadow.mapSize.set(4096, 4096);
+const SHADOW = Math.min(innerWidth, innerHeight) < 600 ? 2048 : 4096;   // lighter on phones
+sun.shadow.mapSize.set(SHADOW, SHADOW);
 Object.assign(sun.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 1, far: 70 });
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.02;
@@ -76,7 +77,9 @@ const poses = {
   open: () => {
     const dir = new THREE.Vector3(0, 0.5, 1).normalize();
     const target = new THREE.Vector3(0, 4.3, -0.5);
-    return { pos: target.clone().addScaledVector(dir, fitDistance(24, 22) * 0.98), target };
+    // portrait phones: frame tighter so the card fills the width
+    const fit = camera.aspect < 1 ? fitDistance(19.5, 22) : fitDistance(24, 22) * 0.98;
+    return { pos: target.clone().addScaledVector(dir, fit), target };
   },
 };
 function snapView(pose) { view.pos.copy(pose.pos); view.target.copy(pose.target); }
