@@ -14,11 +14,43 @@ function ensure() {
   return ctx;
 }
 
+// iPhones mute Web Audio when the ringer switch is on silent. Asking for a "playback" audio
+// session (iOS 17+), or playing a silent looping <audio> element (older iOS), makes the card
+// behave like media instead, so it plays in silent mode too.
+let mediaUnlocked = false;
+function silentWavUrl() {
+  const rate = 8000, n = 800;   // 0.1 s of silence, 8-bit mono
+  const buf = new ArrayBuffer(44 + n);
+  const v = new DataView(buf);
+  const str = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF'); v.setUint32(4, 36 + n, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  str(36, 'data'); v.setUint32(40, n, true);
+  for (let i = 0; i < n; i++) v.setUint8(44 + i, 128);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+function unlockMedia() {
+  if (mediaUnlocked) return;
+  mediaUnlocked = true;
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+  const el = new Audio(silentWavUrl());
+  el.loop = true;
+  el.setAttribute('playsinline', '');
+  el.play().catch(() => { mediaUnlocked = false; });
+}
+
 // Browsers keep audio locked until the first user gesture. Anything requested before that
 // is queued and played on the first tap/click.
 export function unlock() {
   ensure();
+  unlockMedia();
   if (ctx.state === 'running') return;
+  // a one-sample buffer started inside the gesture fully wakes iOS audio
+  const src = ctx.createBufferSource();
+  src.buffer = ctx.createBuffer(1, 1, 22050);
+  src.connect(ctx.destination);
+  src.start(0);
   ctx.resume().then(() => {
     const queued = pending;
     pending = [];
@@ -26,7 +58,8 @@ export function unlock() {
     queued.filter((p) => performance.now() - p.at < 6000).forEach((p) => p.once());
   });
 }
-['pointerdown', 'keydown', 'touchstart'].forEach((ev) => window.addEventListener(ev, unlock, { once: false, passive: true }));
+// iOS only treats touchend/click as a real gesture for audio, so listen for those too
+['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'].forEach((ev) => window.addEventListener(ev, unlock, { passive: true }));
 
 function play(fn) {
   ensure();

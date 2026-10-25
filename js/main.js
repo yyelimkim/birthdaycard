@@ -102,6 +102,14 @@ renderer.domElement.style.touchAction = 'pan-y';
 // ------------------------------------------------------------------ letter overlay
 const veil = $('veil');
 const SCROLL_HINT = 'scroll to read your card \u2193';
+// phones get a "tap here to read your card" button instead of the scroll hint
+const isPhone = () => matchMedia('(max-width: 600px), (hover: none) and (pointer: coarse)').matches;
+const readBtn = $('read');
+function readPrompt(show) {
+  readBtn.classList.toggle('show', show && isPhone());
+  return show && !isPhone() ? SCROLL_HINT : '';
+}
+readBtn.addEventListener('click', () => scrollTo({ top: innerHeight, behavior: 'smooth' }));
 // felt flags hanging from the letter's string (same curve as the svg path: M4 6 Q160 34 316 6)
 document.querySelector('.bunting').insertAdjacentHTML('beforeend', ['#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2', '#f2a65a', '#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2']
   .map((c, i) => {
@@ -114,6 +122,8 @@ function onScroll() {
   const p = THREE.MathUtils.clamp(scrollY / innerHeight, 0, 1);
   veil.style.opacity = p;
   ui.hint.style.opacity = p > 0.01 ? Math.max(0, 1 - p * 4) : '';
+  readBtn.style.opacity = p > 0.01 ? Math.max(0, 1 - p * 4) : '';
+  readBtn.style.pointerEvents = p > 0.2 ? 'none' : '';
   ui.title.style.opacity = p > 0.01 ? Math.max(0, 1 - p * 4) : '';
 }
 addEventListener('scroll', onScroll, { passive: true });
@@ -143,6 +153,7 @@ function reset() {
   gsap.killTweensOf([fold, view.pos, view.target, cardPivot.position, cardPivot.rotation, cardPivot.scale,
     env.group.position, env.group.rotation, env.flap.position, env.flap.rotation, env.dissolve, ground.material]);
   stage = 'arrive';
+  readPrompt(false);
   allowScroll(false);
   controls.enabled = false;
   ui.controls.classList.remove('show');
@@ -218,7 +229,7 @@ function openCard() {
       controls.target.copy(view.target);
       controls.enabled = true;
       ui.controls.classList.add('show');
-      setHint('', SCROLL_HINT);
+      setHint('', readPrompt(true));
       allowScroll(true);
     }, 2.3);
 }
@@ -234,7 +245,7 @@ function toggleFold() {
     ease: closing ? 'power2.inOut' : 'back.out(1.6)',
     onUpdate: () => card.setOpen(fold.alpha),
   });
-  setHint(undefined, closing ? 'tap the card to open it' : SCROLL_HINT);
+  setHint(undefined, closing ? (readPrompt(false), 'tap the card to open it') : readPrompt(true));
 }
 
 // ------------------------------------------------------------------ input
