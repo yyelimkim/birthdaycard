@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=11">
   <script type="importmap">
   {
     "imports": {
@@ -25,6 +25,36 @@
     <h1 id="title"></h1>
   </header>
   <p id="hint"></p>
+  <div id="veil"></div>
+
+  <!-- the birthday letter: scrolls up over the card once it's open -->
+  <main id="scroller" aria-label="Birthday letter">
+    <div class="spacer"></div>
+    <section id="letter">
+      <article class="paper">
+        <svg class="bunting" viewBox="0 0 320 40" aria-hidden="true">
+          <path d="M4 6 Q160 34 316 6" fill="none" stroke="#e7a1ae" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <g class="flags"></g>
+        </svg>
+        <span class="deco star s1" aria-hidden="true"></span>
+        <span class="deco star s2" aria-hidden="true"></span>
+        <span class="deco heart h1" aria-hidden="true"></span>
+        <span class="deco dot d1" aria-hidden="true"></span>
+        <span class="deco dot d2" aria-hidden="true"></span>
+
+        <h2 class="greeting">to: Kiara</h2>
+        <div class="message" lang="ko">
+          <p lang="en">Happy Big 21 Miss Kiara Yang!!!!!!!</p>
+          <p lang="en">So sad I can’t be there with you so I’m sending you this digital card I made!!:(</p>
+          <p>벌써 3학년이되고 카네기에서 세번째의 생일을 마주하고 있다는게 너무… 너무 말도안됨… 시간 참 빠르다ㅜㅜ</p>
+          <p>이대에서 너랑 정연이 없이 지내보니깐 빈자리가 너무 크게 느껴지고 생각보다 내가 너네한테 엄청 많이 기댔었나봐</p>
+          <p>한국에선 매일같이 배민으로 시켜 먹어도 되는 엽떡이랑 감성카페들이 수두룩 하지만 난 너네랑 방부제 들어간 밤티 엽떡이랑 게이츠 라프리마에서 커피 마시는게 더더더 좋아ㅜ 너랑 20대를 같이 보내서 너무 행복하고 감사해 &lt;333 많이 많이 보고싶어 양세민ㅜㅜ Hope you have the bestest birthday ever and invite me to your party over call :p</p>
+        </div>
+        <p class="signoff">with love,<br><span class="from">Yelim</span></p>
+      </article>
+      <p class="back-up">tap outside the letter to see your card again</p>
+    </section>
+  </main>
 
   <button id="sound" class="icon-btn" aria-label="Mute">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none"/><path class="cross" d="M16 9l5 6M21 9l-5 6" fill="none"/></svg>
@@ -36,6 +66,6 @@
 
   <div id="loader">threading the needle…</div>
 
-  <script type="module" src="js/main.js?v=4"></script>
+  <script type="module" src="js/main.js?v=13"></script>
 </body>
 </html>

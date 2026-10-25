@@ -7,6 +7,7 @@ import { createConfetti } from './confetti.js';
 import { sfx, setMuted, isMuted } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
+history.scrollRestoration = 'manual';   // always start at the envelope, not the letter
 const ui = { title: $('title'), hint: $('hint'), controls: $('controls'), replay: $('replay'), sound: $('sound') };
 
 // fonts are painted into felt textures, so they must be ready before we build
@@ -28,15 +29,15 @@ $('stage').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.5, 300);
 
-scene.add(new THREE.HemisphereLight('#fff7f0', '#e7c3cc', 1.5));
-const sun = new THREE.DirectionalLight('#fff0dd', 2.6);
+scene.add(new THREE.HemisphereLight('#fff7f0', '#e7c3cc', 1.05));
+const sun = new THREE.DirectionalLight('#fff0dd', 3.4);
 sun.position.set(-9, 22, 13);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(4096, 4096);
 Object.assign(sun.shadow.camera, { left: -17, right: 17, top: 17, bottom: -17, near: 1, far: 70 });
 sun.shadow.bias = -0.0004;
-sun.shadow.normalBias = 0.03;
-sun.shadow.radius = 4;
+sun.shadow.normalBias = 0.02;
+sun.shadow.radius = 2.5;
 scene.add(sun);
 const fill = new THREE.DirectionalLight('#dfe7ff', 0.7);
 fill.position.set(12, 6, 10);
@@ -44,12 +45,12 @@ scene.add(fill);
 
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ opacity: 0, color: '#6b3a4a', depthWrite: false }));
 ground.rotation.x = -Math.PI / 2;
-ground.position.y = -0.29;
+ground.position.y = -0.44;
 ground.receiveShadow = true;
 scene.add(ground);
 
 // ------------------------------------------------------------------ objects
-const card = buildCard();
+const card = await buildCard();
 const cardPivot = new THREE.Group();           // pivots the whole card about its closed centre
 card.root.position.copy(card.closedCenter).negate();
 cardPivot.add(card.root);
@@ -86,13 +87,42 @@ function tweenView(pose, opts) {
 const controls = new OrbitControls(camera, renderer.domElement);
 Object.assign(controls, {
   enabled: false, enableDamping: true, dampingFactor: 0.08, enablePan: false,
+  enableZoom: false,   // the wheel scrolls to the letter instead
   minDistance: 16, maxDistance: 75, minPolarAngle: 0.15, maxPolarAngle: Math.PI / 2 - 0.04, rotateSpeed: 0.7,
+  minAzimuthAngle: -1.3, maxAzimuthAngle: 1.3,   // keep the inside of the card in view
 });
+
+// vertical swipes scroll the page to the letter; horizontal drags still orbit
+renderer.domElement.style.touchAction = 'pan-y';
+
+// ------------------------------------------------------------------ letter overlay
+const veil = $('veil');
+const SCROLL_HINT = 'scroll to read your card \u2193';
+document.querySelector('.bunting .flags').innerHTML = ['#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2', '#f2a65a', '#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2']
+  .map((c, i) => {
+    const x = 22 + i * 34.5, y = 6 + 28 * (1 - ((x - 160) / 156) ** 2) * 0.5;
+    return `<path d="M${x - 11} ${y} L${x + 11} ${y} L${x} ${y + 20} Z" fill="${c}" stroke="#fff" stroke-width="1" stroke-dasharray="2 2" stroke-linejoin="round"/>`;
+  }).join('');
+function onScroll() {
+  const p = THREE.MathUtils.clamp(scrollY / innerHeight, 0, 1);
+  veil.style.opacity = p;
+  ui.hint.style.opacity = p > 0.01 ? Math.max(0, 1 - p * 4) : '';
+  ui.title.style.opacity = p > 0.01 ? Math.max(0, 1 - p * 4) : '';
+}
+addEventListener('scroll', onScroll, { passive: true });
+// tapping anywhere outside the letter glides back up to the card
+const backToCard = () => scrollTo({ top: 0, behavior: 'smooth' });
+$('letter').addEventListener('click', (e) => { if (!e.target.closest('.paper')) backToCard(); });
+function allowScroll(on) {
+  document.documentElement.classList.toggle('can-scroll', on);
+  if (!on) scrollTo(0, 0);
+  onScroll();
+}
 
 // ------------------------------------------------------------------ state machine
 let stage = 'arrive';
 const fold = { alpha: 0 };
-const IN_ENVELOPE = new THREE.Vector3(0, -0.3, -0.45);
+const IN_ENVELOPE = new THREE.Vector3(0, -0.3, -0.3);
 
 function setHint(title, hint) {
   for (const [el, txt] of [[ui.title, title], [ui.hint, hint]]) {
@@ -106,6 +136,7 @@ function reset() {
   gsap.killTweensOf([fold, view.pos, view.target, cardPivot.position, cardPivot.rotation, cardPivot.scale,
     env.group.position, env.group.rotation, env.flap.position, env.flap.rotation, env.dissolve, ground.material]);
   stage = 'arrive';
+  allowScroll(false);
   controls.enabled = false;
   ui.controls.classList.remove('show');
   confetti.clear();
@@ -119,7 +150,7 @@ function reset() {
   env.group.position.set(34, 0, 0);
   env.group.rotation.set(0, 0, 0.22);
   env.flap.rotation.x = 0;
-  env.flap.position.z = 0.42;
+  env.flap.position.z = 0.66;
   env.dissolve.value = 1;
   ground.material.opacity = 0;
   snapView(poses.front());
@@ -168,7 +199,7 @@ function openCard() {
   tl.to(cardPivot.rotation, { x: 0, y: 0, duration: 1.7, ease: 'power2.inOut' }, 0)
     .to(cardPivot.position, { x: 0, y: 0, z: 0, duration: 1.7, ease: 'power2.inOut' }, 0)
     .add(() => tweenView(poses.open(), { duration: 2.2, ease: 'power2.inOut' }), 0)
-    .to(ground.material, { opacity: 0.2, duration: 1.0 }, 1.0)
+    .to(ground.material, { opacity: 0.28, duration: 1.0 }, 1.0)
     .add(() => sfx.pop(), 0.95)
     .to(fold, { alpha: Math.PI / 2, duration: 1.5, ease: 'back.out(1.6)', onUpdate: () => card.setOpen(fold.alpha) }, 0.9)
     .add(() => confetti.burst(new THREE.Vector3(0, 3, 1)), 1.9)
@@ -178,7 +209,8 @@ function openCard() {
       controls.target.copy(view.target);
       controls.enabled = true;
       ui.controls.classList.add('show');
-      setHint('', 'drag to look around · tap to close');
+      setHint('', SCROLL_HINT);
+      allowScroll(true);
     }, 2.3);
 }
 
@@ -193,7 +225,7 @@ function toggleFold() {
     ease: closing ? 'power2.inOut' : 'back.out(1.6)',
     onUpdate: () => card.setOpen(fold.alpha),
   });
-  setHint(undefined, closing ? 'tap the card to open it' : 'drag to look around · tap to close');
+  setHint(undefined, closing ? 'tap the card to open it' : SCROLL_HINT);
 }
 
 // ------------------------------------------------------------------ input
@@ -210,8 +242,13 @@ let down = null;
 renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
 renderer.domElement.addEventListener('pointerup', (e) => {
   if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) return;
+  if (scrollY > 20) { backToCard(); return; }   // letter is up: a tap on the card area returns to it
   const t = target();
   if (!t || !hit(e, t)) return;
+  if (stage === 'open' && hit(e, card.candle.target)) {   // easter egg: blow out / relight the candle
+    if (card.candle.toggle()) sfx.light(); else sfx.blow();
+    return;
+  }
   if (stage === 'envelope') openEnvelope();
   else if (stage === 'card') openCard();
   else if (stage === 'open') toggleFold();
@@ -233,13 +270,19 @@ addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
   if (!controls.enabled) snapView(stage === 'open' ? poses.open() : poses.front());
+  else {
+    // keep the viewing direction, refit the distance for the new aspect
+    const fit = poses.open();
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    camera.position.copy(controls.target).addScaledVector(dir, fit.pos.distanceTo(fit.target));
+  }
 });
 
 // ------------------------------------------------------------------ loop
 const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
   const dt = clock.getDelta(), t = clock.elapsedTime;
-  card.tick(t);
+  card.tick(t, dt);
   confetti.update(dt);
   env.body.position.y = Math.sin(t * 1.4) * 0.18;
   env.dissolve.origin.value.copy(env.group.position);

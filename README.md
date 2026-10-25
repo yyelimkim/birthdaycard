@@ -14,8 +14,19 @@ python3 -m http.server 8123
 # open http://localhost:8123
 ```
 
+## Design source (Figma)
+
+The pop-up scene comes from the "Back panel art" and "Happy Birthday banner" frames in the Figma file.
+Each chunk (hair, face, cake tier, star…) is rendered into `assets/figma/atlas.png`, with its position in
+`assets/figma/chunks.json`. `js/figma-felt.js` traces each chunk's outline into a thick felt cutout, prints the art
+on its face and gives it a soft drop shadow; `js/card.js` decides which pop-up fold each chunk sits on.
+To pick up design edits, re-export the atlas + chunks from Figma.
+
+Easter egg: tap the candle flame to blow it out, tap again to relight it.
+
 ## Structure
 
+- `js/figma-felt.js`: turns the Figma atlas chunks into felt pieces
 - `js/felt.js`: felt toolkit. Extruded cutouts with procedurally painted textures (fibres, running stitches, embroidery text), sheen material and shared fibre bump map
 - `js/card.js`: the card. Base, back panel, cover, and the parallel-fold pop-up layers (friends, cake, banner)
 - `js/envelope.js`: felt envelope, hinged flap, noise dissolve shader

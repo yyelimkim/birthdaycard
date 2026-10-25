@@ -39,6 +39,7 @@ function addDissolve(material, uniform) {
 export function buildEnvelope() {
   const group = new THREE.Group();
   const body = new THREE.Group();
+  body.userData.asset = 'Envelope';
   group.add(body);
   const base = '#a9cbe8', side = '#a0c3e2', bottom = '#b6d3ec', flapCol = '#94b9dc';
   const thread = '#f3f8ff';
@@ -54,12 +55,12 @@ export function buildEnvelope() {
   }));
   // pocket
   const hw = EW / 2, hh = EH / 2;
-  body.add(felt(roundedPoly([[-hw, -hh], [-0.6, -0.4], [-hw, hh]], 0.35), { color: side, depth: 0.05, z: 0.18, stitch: thread, inset: 0.2 }));
+  body.add(felt(roundedPoly([[-hw, -hh], [-0.6, -0.4], [-hw, hh]], 0.35), { color: side, depth: 0.05, z: 0.42, stitch: thread, inset: 0.2 }));
   body.add(felt(roundedPoly([[hw, -hh], [hw, hh], [0.6, -0.4]], 0.35), {
-    color: side, depth: 0.05, z: 0.18, stitch: thread, inset: 0.2,
+    color: side, depth: 0.05, z: 0.42, stitch: thread, inset: 0.2,
   }));
   body.add(felt(roundedPoly([[-hw, -hh], [hw, -hh], [hw, -hh + 0.4], [0, 0.7], [-hw, -hh + 0.4]], 0.35), {
-    color: bottom, depth: 0.05, z: 0.28, stitch: thread, inset: 0.2,
+    color: bottom, depth: 0.05, z: 0.52, stitch: thread, inset: 0.2,
     paint: (c) => {
       text(c, 'to: Kiara', 0, -4.5, { size: 1.3, font: 'Gaegu', weight: 700, color: '#3e4a78' });
       c.strokeStyle = 'rgba(62,74,120,0.5)'; c.lineWidth = 0.04;
@@ -83,13 +84,14 @@ export function buildEnvelope() {
       text(c, '♥', 0, -0.55, { size: 0.35, color: '#d9485f' });
     },
   });
-  stamp.position.set(7.4, 2.4, 0.26);
+  stamp.position.set(7.4, 2.4, 0.5);
   stamp.rotation.z = -0.08;
   body.add(stamp);
 
   // flap, hinged along the top edge
   const flap = new THREE.Group();
-  flap.position.set(0, hh, 0.42);
+  flap.name = 'Flap';
+  flap.position.set(0, hh, 0.66);
   flap.add(felt(roundedPoly([[-hw, 0], [hw, 0], [0, -EH * 0.6]], 0.45), { color: flapCol, depth: 0.05, stitch: thread, inset: 0.22 }));
   flap.add(felt(circle(0.95, 0, -EH * 0.6 + 1.15), { color: '#fbf7ef', depth: 0.05, z: 0.09, stitch: '#f2b2bd', inset: 0.13 }));
   flap.add(felt(heart(0, -EH * 0.6 + 1.15, 0.6), { color: '#e05a6a', depth: 0.06, z: 0.18, inset: 0.1, stitchWidth: 0.035 }));

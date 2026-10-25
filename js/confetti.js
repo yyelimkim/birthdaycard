@@ -4,7 +4,7 @@ import { fibreCanvas } from './felt.js';
 
 const COLORS = ['#f6e39a', '#f2b2bd', '#a8dccb', '#b9c7f2', '#f2a65a', '#fbf7ef', '#e86f7f', '#c3da86'];
 
-export function createConfetti(scene, count = 180) {
+export function createConfetti(scene, count = 120) {
   const bump = new THREE.CanvasTexture(fibreCanvas);
   const mat = new THREE.MeshPhysicalMaterial({ roughness: 1, sheen: 1, sheenRoughness: 0.5, bumpMap: bump, bumpScale: 1.5 });
   const geos = [new THREE.CylinderGeometry(0.17, 0.17, 0.05, 12), new THREE.BoxGeometry(0.36, 0.05, 0.18)];
@@ -30,7 +30,7 @@ export function createConfetti(scene, count = 180) {
     for (const q of parts) {
       q.p.copy(origin).add(new THREE.Vector3((Math.random() - 0.5) * 6, Math.random() * 2, (Math.random() - 0.5) * 3));
       const a = Math.random() * Math.PI * 2, s = 3 + Math.random() * 7;
-      q.v.set(Math.cos(a) * s, 10 + Math.random() * 9, Math.sin(a) * s * 0.7 + 2);
+      q.v.set(Math.cos(a) * s, 10 + Math.random() * 9, Math.sin(a) * s * 0.35 - 0.5);
       q.r.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
       q.w.set((Math.random() - 0.5) * 14, (Math.random() - 0.5) * 14, (Math.random() - 0.5) * 14);
       q.rest = false;
@@ -39,7 +39,7 @@ export function createConfetti(scene, count = 180) {
   }
 
   // floor: top of the card base inside its footprint, otherwise the table
-  const floorAt = (p) => (Math.abs(p.x) < 9 && Math.abs(p.z) < 6.5 ? 0.02 : -0.24);
+  const floorAt = (p) => (Math.abs(p.x) < 9 && Math.abs(p.z) < 6.5 ? 0.14 : -0.4);
 
   function update(dt) {
     if (!meshes[0].visible) return;
@@ -53,6 +53,8 @@ export function createConfetti(scene, count = 180) {
         q.r.x += q.w.x * dt; q.r.y += q.w.y * dt; q.r.z += q.w.z * dt;
         const f = floorAt(q.p);
         if (q.p.y <= f && q.v.y < 0) {
+          // keep the stitched message near the front edge readable
+          if (f > 0 && q.p.z > 3.6) q.p.z = 1 + Math.random() * 2.6;
           q.p.y = f;
           q.rest = true;
           q.r.x = 0; q.r.z = 0;

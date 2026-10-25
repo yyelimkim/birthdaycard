@@ -119,6 +119,10 @@ export const sfx = {
     rustle({ dur: 0.5, from: 600, to: 3000, gain: 0.3 });
     [1568, 2093, 2637, 3136].forEach((f, i) => bell(f, 0.12 + i * 0.07, 0.7, 0.07));
   }),
+  // blowing out the candle
+  blow: () => play(() => rustle({ dur: 0.7, from: 1400, to: 500, q: 0.6, gain: 0.5 })),
+  // relighting it
+  light: () => play(() => { rustle({ dur: 0.35, from: 2500, to: 4000, q: 1.5, gain: 0.25 }); bell(1568, 0.12, 0.6, 0.06); }),
   // music-box "Happy Birthday"
   song: () => play(() => {
     const N = { G4: 392, A4: 440, B4: 493.9, C5: 523.3, D5: 587.3, E5: 659.3, F5: 698.5, G5: 784 };

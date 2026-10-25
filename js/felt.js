@@ -79,6 +79,7 @@ export function roundRect(x, y, w, h, r) {
 }
 
 // Polygon with every corner rounded (works for concave corners too).
+// A point may carry its own radius as a third value: [x, y, r].
 export function roundedPoly(pts, r) {
   const s = new THREE.Shape();
   const n = pts.length;
@@ -86,7 +87,7 @@ export function roundedPoly(pts, r) {
   for (let i = 0; i < n; i++) {
     const prev = P[(i - 1 + n) % n], cur = P[i], next = P[(i + 1) % n];
     const d1 = prev.clone().sub(cur), d2 = next.clone().sub(cur);
-    const rr = Math.min(r, d1.length() / 2, d2.length() / 2);
+    const rr = Math.min(pts[i][2] ?? r, d1.length() / 2, d2.length() / 2);
     const a = cur.clone().add(d1.normalize().multiplyScalar(rr));
     const b = cur.clone().add(d2.normalize().multiplyScalar(rr));
     if (i === 0) s.moveTo(a.x, a.y); else s.lineTo(a.x, a.y);
@@ -228,13 +229,13 @@ export const pieces = []; // every felt mesh, for raycasting / bookkeeping
  */
 export function felt(shape, opts = {}) {
   const {
-    color = '#f2e6d0', depth = 0.08, z = 0, stitch = shade(color, 0.22), inset = 0.16,
+    color = '#f2e6d0', depth = 0.14, z = 0, stitch = shade(color, 0.22), inset = 0.16,
     paint = null, stitchWidth = 0.045, sheen = 0.9, bump = 1, holes = null,
   } = opts;
   if (holes) shape.holes.push(...holes);
-  const bev = Math.min(0.035, depth * 0.45);
+  const bev = Math.min(0.06, depth * 0.4);
   const geo = new THREE.ExtrudeGeometry(shape, {
-    depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev * 0.9, bevelSegments: 2, curveSegments: 28,
+    depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev * 0.8, bevelSegments: 3, curveSegments: 32,
   });
   geo.computeBoundingBox();
   const bb = geo.boundingBox;
@@ -283,6 +284,7 @@ export function felt(shape, opts = {}) {
   });
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.z = z;
+  mesh.userData.felt = { shape, color, stitch, inset, stitchWidth, paint };   // for the SVG exporter
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   pieces.push(mesh);
@@ -298,6 +300,7 @@ export function pom(color, r, x, y, z = 0) {
   }));
   m.scale.set(r, r, r * 0.8);
   m.position.set(x, y, z + r * 0.6);
+  m.userData.pom = { color, r };
   m.castShadow = true;
   return m;
 }
@@ -308,6 +311,7 @@ export function thread(points, color = '#e9dcc5', radius = 0.03) {
   const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 64, radius, 6, false),
     new THREE.MeshStandardMaterial({ color, roughness: 0.9 }));
   m.castShadow = true;
+  m.userData.thread = { points, color, radius };
   return m;
 }
 
