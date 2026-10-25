@@ -142,3 +142,10 @@ html.can-scroll #scroller { display: block; }
 .deco.dot { width: 12px; height: 12px; --round: 50%; --c: #f2b2bd; }
 .deco.d1 { top: 76px; left: 34px; }
 .deco.d2 { top: 52%; right: 26px; --c: #b9c7f2; }
+
+/* phones: tighter top of the letter, and drop the dot that sat in that gap */
+@media (max-width: 600px) {
+  .paper { padding-top: 92px; }
+  .bunting { top: 16px; }
+  .deco.d1 { display: none; }
+}
