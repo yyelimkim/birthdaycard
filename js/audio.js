@@ -134,9 +134,12 @@ export const sfx = {
     ];
     const beat = 0.36;
     let t = 0.1;
-    for (const [n, len] of tune) {
-      bell(N[n] * 2, t, 1.4, 0.11);
-      t += len * beat;
+    for (let round = 0; round < 2; round++) {   // play it through twice
+      for (const [n, len] of tune) {
+        bell(N[n] * 2, t, 1.4, 0.11);
+        t += len * beat;
+      }
+      t += beat * 1.5;   // short breath before the repeat
     }
   }),
 };

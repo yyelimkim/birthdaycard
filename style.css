@@ -30,6 +30,11 @@ body {
   color: var(--accent);
   text-shadow: 0 2px 0 #fff4f0, 0 6px 18px rgba(217, 72, 95, 0.18);
 }
+#note {
+  margin: 8px 0 0; font-family: 'Gaegu', cursive; font-weight: 700; font-size: 14px; opacity: 0;
+  transition: opacity 0.6s ease;
+}
+#note.show { opacity: 0.6; }
 #hint {
   position: fixed; left: 0; right: 0; bottom: max(28px, env(safe-area-inset-bottom));
   text-align: center; pointer-events: none; padding: 0 16px;
@@ -85,36 +90,55 @@ body:not(.loading) #loader { opacity: 0; }
 #scroller { display: none; position: relative; pointer-events: none; }
 html.can-scroll #scroller { display: block; }
 .spacer { height: 100vh; height: 100svh; }
-#letter { pointer-events: auto; padding: 5vh 16px 8vh; display: grid; justify-items: center; gap: 18px; cursor: pointer; }
+#letter { pointer-events: auto; padding: 5vh 16px 8vh; display: grid; justify-items: center; gap: 44px; cursor: pointer; }
 
+/* felt: the same fibre texture the 3D card uses (--fibre is set from js), blended over a flat colour */
+.felt-frame {
+  pointer-events: auto; position: relative; cursor: auto;
+  width: min(880px, 100%); padding: 12px; border-radius: 36px;
+  background: var(--fibre) 0 0 / 256px, #eaa3b3;
+  background-blend-mode: overlay;
+  box-shadow: inset 0 0 0 1px rgba(150, 70, 90, 0.25), 0 22px 50px rgba(120, 60, 80, 0.25);
+}
 .paper {
-  --felt: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.3 0 0 0 0 0.3 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
-  pointer-events: auto; position: relative;
-  width: min(880px, 100%); min-height: 86vh; min-height: 86svh; cursor: auto;
-  padding: clamp(64px, 9vh, 96px) clamp(28px, 7vw, 88px) clamp(56px, 8vh, 88px);
-  background: var(--felt), #fbf4e8;
+  position: relative;
+  min-height: 86vh; min-height: 86svh;
+  padding: clamp(124px, 16vh, 156px) clamp(28px, 7vw, 88px) clamp(56px, 8vh, 88px);
+  background: var(--fibre) 0 0 / 256px, #f6ecdc;
+  background-blend-mode: overlay;
   border-radius: 26px;
-  box-shadow: 0 0 0 10px #eaa3b3, 0 0 0 11px #d98d9f, 0 22px 50px rgba(120, 60, 80, 0.25);
+  box-shadow: 0 3px 5px rgba(90, 40, 50, 0.3), 0 1px 1px rgba(90, 40, 50, 0.2);
   outline: 2px dashed #e7a1ae; outline-offset: -14px;
   color: var(--ink); font-family: 'Gaegu', cursive;
 }
-.bunting { position: absolute; top: 14px; left: 50%; width: 78%; transform: translateX(-50%); overflow: visible; }
-.greeting { margin: 10px 0 22px; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: clamp(32px, 5vw, 50px); color: var(--accent); }
+.bunting { position: absolute; top: 20px; left: 50%; width: 78%; aspect-ratio: 320 / 40; transform: translateX(-50%); }
+.bunting svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.flag { position: absolute; width: 7%; aspect-ratio: 1 / 0.92; transform: translateX(-50%); filter: drop-shadow(0 2px 1.5px rgba(90, 40, 50, 0.35)); }
+.flag::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--fibre) 0 0 / 128px, var(--c); background-blend-mode: overlay;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.greeting { margin: 0 0 22px; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: clamp(32px, 5vw, 50px); color: var(--accent); }
 .message { font-size: clamp(21px, 2.2vw + 10px, 30px); line-height: 1.5; font-weight: 700; word-break: keep-all; overflow-wrap: break-word; }
 .message p { margin: 0 0 0.8em; }
-.placeholder { opacity: 0.45; }
 .signoff { margin: 36px 0 0; text-align: right; font-size: clamp(21px, 2.2vw + 10px, 30px); font-weight: 700; }
 .from { font-family: 'Fredoka', sans-serif; color: var(--accent); }
 .back-up { margin: 0; font-family: 'Gaegu', cursive; font-weight: 700; font-size: 18px; opacity: 0.7; }
 
-/* little felt appliqués */
-.deco { position: absolute; display: block; filter: drop-shadow(0 2px 1.5px rgba(90, 40, 50, 0.3)); }
-.deco.star { width: 34px; height: 34px; background: var(--felt), #f6e39a;
-  clip-path: polygon(50% 0, 62% 35%, 98% 37%, 69% 59%, 79% 95%, 50% 74%, 21% 95%, 31% 59%, 2% 37%, 38% 35%); }
+/* little felt appliqués: the shadow sits on the span, the clipped felt shape on ::before */
+.deco { position: absolute; display: block; filter: drop-shadow(0 2px 1.5px rgba(90, 40, 50, 0.35)); }
+.deco::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--fibre) 0 0 / 128px, var(--c); background-blend-mode: overlay;
+  clip-path: var(--clip, none); border-radius: var(--round, 0);
+}
+.deco.star { width: 34px; height: 34px; --c: #f6e39a;
+  --clip: polygon(50% 0, 62% 35%, 98% 37%, 69% 59%, 79% 95%, 50% 74%, 21% 95%, 31% 59%, 2% 37%, 38% 35%); }
 .deco.s1 { top: 30px; right: 30px; transform: rotate(12deg); }
-.deco.s2 { bottom: 34px; left: 30px; width: 26px; height: 26px; background: var(--felt), #a8dccb; transform: rotate(-10deg); }
-.deco.heart { width: 30px; height: 28px; bottom: 30px; left: 66px; background: var(--felt), #e05a6a;
-  clip-path: path('M15 27 C6 20 0 14 0 8 C0 3 4 0 8 0 C11 0 13 2 15 5 C17 2 19 0 22 0 C26 0 30 3 30 8 C30 14 24 20 15 27 Z'); }
-.deco.dot { width: 12px; height: 12px; border-radius: 50%; background: #f2b2bd; }
+.deco.s2 { bottom: 34px; left: 30px; width: 26px; height: 26px; --c: #a8dccb; transform: rotate(-10deg); }
+.deco.heart { width: 30px; height: 28px; bottom: 30px; left: 66px; --c: #e05a6a;
+  --clip: path('M15 27 C6 20 0 14 0 8 C0 3 4 0 8 0 C11 0 13 2 15 5 C17 2 19 0 22 0 C26 0 30 3 30 8 C30 14 24 20 15 27 Z'); }
+.deco.dot { width: 12px; height: 12px; --round: 50%; --c: #f2b2bd; }
 .deco.d1 { top: 76px; left: 34px; }
-.deco.d2 { top: 52%; right: 26px; background: #b9c7f2; }
+.deco.d2 { top: 52%; right: 26px; --c: #b9c7f2; }

@@ -4,6 +4,7 @@ import { gsap } from 'gsap';
 import { buildCard } from './card.js';
 import { buildEnvelope } from './envelope.js';
 import { createConfetti } from './confetti.js';
+import { fibreCanvas } from './felt.js';
 import { sfx, setMuted, isMuted } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
@@ -74,8 +75,8 @@ const poses = {
   front: () => ({ pos: new THREE.Vector3(0, 0, fitDistance(28, 27)), target: new THREE.Vector3(0, 0, 0) }),
   open: () => {
     const dir = new THREE.Vector3(0, 0.5, 1).normalize();
-    const target = new THREE.Vector3(0, 3.6, -0.5);
-    return { pos: target.clone().addScaledVector(dir, fitDistance(24, 22) * 1.12), target };
+    const target = new THREE.Vector3(0, 4.3, -0.5);
+    return { pos: target.clone().addScaledVector(dir, fitDistance(24, 22) * 0.98), target };
   },
 };
 function snapView(pose) { view.pos.copy(pose.pos); view.target.copy(pose.target); }
@@ -98,11 +99,14 @@ renderer.domElement.style.touchAction = 'pan-y';
 // ------------------------------------------------------------------ letter overlay
 const veil = $('veil');
 const SCROLL_HINT = 'scroll to read your card \u2193';
-document.querySelector('.bunting .flags').innerHTML = ['#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2', '#f2a65a', '#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2']
+// felt flags hanging from the letter's string (same curve as the svg path: M4 6 Q160 34 316 6)
+document.querySelector('.bunting').insertAdjacentHTML('beforeend', ['#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2', '#f2a65a', '#f2b2bd', '#f6e39a', '#a8dccb', '#b9c7f2']
   .map((c, i) => {
-    const x = 22 + i * 34.5, y = 6 + 28 * (1 - ((x - 160) / 156) ** 2) * 0.5;
-    return `<path d="M${x - 11} ${y} L${x + 11} ${y} L${x} ${y + 20} Z" fill="${c}" stroke="#fff" stroke-width="1" stroke-dasharray="2 2" stroke-linejoin="round"/>`;
-  }).join('');
+    const x = 22 + i * 34.5, t = (x - 4) / 312, y = 6 + 2 * t * (1 - t) * 28;
+    return `<span class="flag" style="left:${(x / 320) * 100}%;top:${(y / 40) * 100}%;--c:${c}"></span>`;
+  }).join(''));
+// the letter uses the same felt fibres as the 3D card
+document.documentElement.style.setProperty('--fibre', `url(${fibreCanvas.toDataURL()})`);
 function onScroll() {
   const p = THREE.MathUtils.clamp(scrollY / innerHeight, 0, 1);
   veil.style.opacity = p;
@@ -112,7 +116,7 @@ function onScroll() {
 addEventListener('scroll', onScroll, { passive: true });
 // tapping anywhere outside the letter glides back up to the card
 const backToCard = () => scrollTo({ top: 0, behavior: 'smooth' });
-$('letter').addEventListener('click', (e) => { if (!e.target.closest('.paper')) backToCard(); });
+$('letter').addEventListener('click', (e) => { if (!e.target.closest('.felt-frame')) backToCard(); });
 function allowScroll(on) {
   document.documentElement.classList.toggle('can-scroll', on);
   if (!on) scrollTo(0, 0);
@@ -160,6 +164,7 @@ function reset() {
 
 function arrive() {
   setHint("You've got mail!", '');
+  $('note').classList.add('show');
   sfx.arrive();
   const tl = gsap.timeline({ delay: 0.35 });
   tl.to(env.group.position, { x: 0, duration: 1.6, ease: 'power3.out' }, 0)
@@ -174,6 +179,7 @@ function arrive() {
 
 function openEnvelope() {
   stage = 'busy';
+  $('note').classList.remove('show');
   setHint('', '');
   sfx.openFlap();
   const tl = gsap.timeline();

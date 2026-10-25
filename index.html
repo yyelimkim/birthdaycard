@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=11">
+  <link rel="stylesheet" href="style.css?v=13">
   <script type="importmap">
   {
     "imports": {
@@ -23,6 +23,7 @@
 
   <header class="overlay">
     <h1 id="title"></h1>
+    <p id="note">best experienced on a computer, with sound on</p>
   </header>
   <p id="hint"></p>
   <div id="veil"></div>
@@ -31,11 +32,13 @@
   <main id="scroller" aria-label="Birthday letter">
     <div class="spacer"></div>
     <section id="letter">
+      <div class="felt-frame">
       <article class="paper">
-        <svg class="bunting" viewBox="0 0 320 40" aria-hidden="true">
-          <path d="M4 6 Q160 34 316 6" fill="none" stroke="#e7a1ae" stroke-width="1.5" stroke-dasharray="4 3"/>
-          <g class="flags"></g>
-        </svg>
+        <div class="bunting" aria-hidden="true">
+          <svg viewBox="0 0 320 40" preserveAspectRatio="none">
+            <path d="M4 6 Q160 34 316 6" fill="none" stroke="#e7a1ae" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"/>
+          </svg>
+        </div>
         <span class="deco star s1" aria-hidden="true"></span>
         <span class="deco star s2" aria-hidden="true"></span>
         <span class="deco heart h1" aria-hidden="true"></span>
@@ -52,6 +55,7 @@
         </div>
         <p class="signoff">with love,<br><span class="from">Yelim</span></p>
       </article>
+      </div>
       <p class="back-up">tap outside the letter to see your card again</p>
     </section>
   </main>
@@ -66,6 +70,6 @@
 
   <div id="loader">threading the needle…</div>
 
-  <script type="module" src="js/main.js?v=13"></script>
+  <script type="module" src="js/main.js?v=18"></script>
 </body>
 </html>
